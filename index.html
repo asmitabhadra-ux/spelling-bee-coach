@@ -1,0 +1,769 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🐝 Spelling Bee Coach</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;600;700;800;900&display=swap');
+
+:root {
+  --honey:      #F5A623;
+  --deep-honey: #C47D00;
+  --stripe:     #FFD700;
+  --comb:       #FFF6D6;
+  --dark:       #1C1100;
+  --correct:    #27AE60;
+  --wrong:      #E74C3C;
+  --sky:        #FFFBEF;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background: var(--sky);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* Honeycomb pattern */
+body::before {
+  content: '';
+  position: fixed; inset: 0; z-index: 0;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='60' height='104'%3E%3Cpath d='M30 4L2 20v32l28 16 28-16V20zm0 8l22 12.7v25.6L30 62.3 8 50.3V24.7z' fill='%23F5A623' fill-opacity='0.07'/%3E%3C/svg%3E");
+  pointer-events: none;
+}
+
+.wrap { position: relative; z-index: 1; max-width: 720px; margin: 0 auto; padding: 16px 16px 60px; }
+
+/* ── Header ───────────────────────────────── */
+.header { text-align: center; padding: 24px 0 18px; }
+.bee-anim { display: inline-block; font-size: 54px; animation: waggle 2.4s ease-in-out infinite; }
+@keyframes waggle {
+  0%,100% { transform: rotate(-10deg) scale(1); }
+  50%      { transform: rotate(10deg) scale(1.12); }
+}
+.app-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 40px;
+  color: var(--deep-honey);
+  text-shadow: 3px 3px 0 #fff, 5px 5px 0 #F5A62355;
+  line-height: 1;
+}
+.app-sub { font-size: 14px; font-weight: 700; color: #9A7000; margin-top: 5px; letter-spacing: .5px; }
+
+/* ── Card ─────────────────────────────────── */
+.card {
+  background: #fff;
+  border-radius: 24px;
+  border: 3px solid var(--honey);
+  box-shadow: 6px 6px 0 var(--honey);
+  padding: 24px 22px;
+  margin-bottom: 18px;
+}
+.card-title {
+  font-family: 'Fredoka One', cursive;
+  font-size: 20px;
+  color: var(--deep-honey);
+  margin-bottom: 14px;
+  display: flex; align-items: center; gap: 8px;
+}
+
+/* ── Buttons ──────────────────────────────── */
+.btn {
+  font-family: 'Fredoka One', cursive;
+  font-size: 17px;
+  padding: 11px 24px;
+  border: none; border-radius: 50px;
+  cursor: pointer;
+  display: inline-flex; align-items: center; gap: 8px;
+  transition: transform .1s, box-shadow .1s;
+  letter-spacing: .3px;
+}
+.btn:disabled { opacity: .45; cursor: not-allowed; transform: none !important; box-shadow: none !important; }
+.btn-honey    { background: var(--honey);   color: var(--dark); box-shadow: 0 4px 0 var(--deep-honey); }
+.btn-honey:not(:disabled):hover    { background: var(--stripe); }
+.btn-honey:not(:disabled):active   { transform: translateY(3px); box-shadow: 0 1px 0 var(--deep-honey); }
+.btn-ghost    { background: var(--comb);    color: #7A5800;     box-shadow: 0 4px 0 #DEC96A; }
+.btn-ghost:not(:disabled):hover    { background: #FFE88A; }
+.btn-ghost:not(:disabled):active   { transform: translateY(3px); box-shadow: 0 1px 0 #DEC96A; }
+.btn-green    { background: var(--correct); color: #fff;        box-shadow: 0 4px 0 #1A7A40; }
+.btn-green:not(:disabled):active   { transform: translateY(3px); box-shadow: 0 1px 0 #1A7A40; }
+.btn-red      { background: var(--wrong);   color: #fff;        box-shadow: 0 4px 0 #9A2218; }
+.btn-red:not(:disabled):active     { transform: translateY(3px); box-shadow: 0 1px 0 #9A2218; }
+
+/* ── Steps ────────────────────────────────── */
+.step { display: none; }
+.step.active { display: block; }
+
+/* Setup step */
+.how-it-works {
+  background: var(--comb);
+  border: 2px solid #EACA6A;
+  border-radius: 16px;
+  padding: 14px 18px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #7A5800;
+  margin-bottom: 18px;
+  line-height: 1.8;
+}
+.how-it-works ol { padding-left: 20px; }
+.how-it-works li { margin-bottom: 4px; }
+
+textarea {
+  width: 100%;
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  border: 3px solid var(--honey);
+  border-radius: 14px;
+  padding: 12px 14px;
+  resize: vertical;
+  min-height: 120px;
+  color: var(--dark);
+  background: #FFFDF5;
+  outline: none;
+  transition: border-color .2s, box-shadow .2s;
+}
+textarea:focus { border-color: var(--deep-honey); box-shadow: 0 0 0 4px rgba(245,166,35,.2); }
+
+.voice-row {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap; margin-top: 14px;
+}
+.voice-row label { font-weight: 800; font-size: 14px; color: #7A5800; }
+select {
+  font-family: 'Nunito', sans-serif; font-size: 14px; font-weight: 700;
+  border: 2.5px solid var(--honey); border-radius: 12px;
+  padding: 7px 12px; background: #fff; color: var(--dark);
+  cursor: pointer; outline: none;
+}
+.chip-list { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 12px; }
+.chip {
+  background: var(--comb); border: 2px solid var(--honey);
+  border-radius: 50px; padding: 5px 14px;
+  font-size: 14px; font-weight: 800; color: var(--dark);
+  cursor: pointer; transition: all .15s;
+  user-select: none;
+}
+.chip:hover { background: #FFE056; }
+.chip.removed { background: #FFE0DE; border-color: var(--wrong); color: #A0221A; text-decoration: line-through; opacity: .5; }
+
+/* Game step */
+.scoreboard { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin-bottom: 16px; }
+.score-tile {
+  background: #fff; border: 2.5px solid var(--honey);
+  border-radius: 16px; padding: 10px 18px; text-align: center;
+  min-width: 82px; box-shadow: 3px 3px 0 var(--honey);
+}
+.score-num   { font-family: 'Fredoka One', cursive; font-size: 28px; line-height: 1; }
+.score-label { font-size: 11px; font-weight: 800; color: #9A7000; text-transform: uppercase; letter-spacing: 1px; }
+.c-green { color: var(--correct); }
+.c-honey { color: var(--deep-honey); }
+.c-red   { color: var(--wrong); }
+
+.progress-wrap { background: #F0E4B0; border-radius: 50px; height: 12px; margin-bottom: 6px; overflow: hidden; border: 2px solid var(--honey); }
+.progress-fill { height: 100%; background: linear-gradient(90deg, var(--honey), var(--stripe)); border-radius: 50px; transition: width .45s ease; }
+.progress-label { font-size: 13px; font-weight: 800; color: #9A7000; text-align: center; margin-bottom: 16px; }
+
+/* Moderator speech bubble */
+.bubble-wrap { position: relative; margin-bottom: 18px; }
+.bubble-bee  { font-size: 42px; position: absolute; left: -8px; top: -24px; animation: float 3s ease-in-out infinite; }
+@keyframes float { 0%,100%{transform:translateY(0) rotate(-5deg);} 50%{transform:translateY(-7px) rotate(5deg);} }
+.bubble {
+  background: linear-gradient(135deg, #FFFDE0, #FFF5B0);
+  border: 3px solid var(--honey);
+  border-radius: 20px 20px 20px 6px;
+  padding: 18px 18px 18px 22px;
+  margin-left: 30px;
+  box-shadow: 4px 4px 0 #E8C850;
+  min-height: 72px;
+}
+.bubble-tag  { font-size: 11px; font-weight: 900; color: #9A7000; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 6px; }
+.bubble-text { font-family: 'Fredoka One', cursive; font-size: 22px; color: var(--dark); line-height: 1.35; }
+
+.speaking-dot {
+  display: inline-block; width: 9px; height: 9px;
+  background: var(--honey); border-radius: 50%; margin-left: 8px;
+  animation: blink-dot 0.7s ease-in-out infinite;
+  vertical-align: middle; opacity: 0;
+}
+.speaking .speaking-dot { opacity: 1; }
+@keyframes blink-dot { 0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.6);opacity:.4;} }
+
+/* Speak again button */
+.hear-again-btn {
+  background: var(--comb); border: 2px solid var(--honey);
+  border-radius: 50px; padding: 7px 14px;
+  font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 13px; color: #7A5800;
+  cursor: pointer; transition: all .15s;
+}
+.hear-again-btn:hover { background: var(--stripe); }
+
+/* Answer area */
+.answer-area { display: flex; gap: 10px; margin-bottom: 14px; }
+.answer-input {
+  flex: 1; font-family: 'Fredoka One', cursive; font-size: 24px;
+  letter-spacing: 3px; text-transform: uppercase;
+  border: 3px solid var(--honey); border-radius: 14px;
+  padding: 11px 16px; color: var(--dark); background: #fff;
+  outline: none; transition: border-color .2s, box-shadow .2s;
+}
+.answer-input:focus { border-color: var(--deep-honey); box-shadow: 0 0 0 4px rgba(245,166,35,.2); }
+.answer-input:disabled { background: #F5F5F5; }
+
+/* Feedback */
+.feedback-box {
+  border-radius: 18px; padding: 16px 20px;
+  font-size: 16px; font-weight: 700; margin-bottom: 14px;
+  display: none; animation: pop .28s cubic-bezier(.34,1.56,.64,1) both;
+}
+@keyframes pop { from{transform:scale(.82);opacity:0;} to{transform:scale(1);opacity:1;} }
+.feedback-box.correct { display: block; background: #D5F5E3; border: 3px solid var(--correct); color: #1A6030; }
+.feedback-box.wrong   { display: block; background: #FDEDEC; border: 3px solid var(--wrong);   color: #7B221A; }
+.feedback-icon { font-size: 28px; margin-bottom: 4px; }
+
+.action-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Results step */
+.results-hero { text-align: center; padding: 10px 0 20px; }
+.trophy-emoji { font-size: 70px; animation: bounce-trophy .7s ease-in-out infinite alternate; }
+@keyframes bounce-trophy { from{transform:translateY(0);} to{transform:translateY(-16px);} }
+.result-title { font-family: 'Fredoka One', cursive; font-size: 34px; color: var(--deep-honey); margin: 12px 0 4px; }
+.result-sub   { font-size: 15px; font-weight: 700; color: #8A6400; margin-bottom: 20px; line-height: 1.5; }
+
+.missed-section { margin-top: 4px; }
+.missed-title   { font-family: 'Fredoka One', cursive; font-size: 18px; color: var(--wrong); margin-bottom: 10px; }
+.missed-row {
+  display: flex; align-items: center; gap: 14px;
+  padding: 10px 0; border-bottom: 2px dashed #F0D880;
+  font-size: 15px;
+}
+.missed-word { font-family: 'Fredoka One', cursive; font-size: 19px; color: var(--wrong); min-width: 110px; }
+.missed-typed { color: #999; font-size: 13px; font-weight: 700; }
+
+.results-actions { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; margin-top: 20px; }
+
+/* ── Floating Settings ── */
+#settingsToggle {
+  position: fixed;
+  bottom: 22px; left: 22px;
+  width: 48px; height: 48px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--honey);
+  box-shadow: 3px 3px 0 var(--honey);
+  font-size: 22px;
+  cursor: pointer;
+  z-index: 100;
+  display: flex; align-items: center; justify-content: center;
+  transition: transform .2s, box-shadow .2s;
+}
+#settingsToggle:hover { transform: rotate(30deg) scale(1.1); }
+
+#settingsPanel {
+  position: fixed;
+  bottom: 82px; left: 22px;
+  background: #fff;
+  border: 3px solid var(--honey);
+  border-radius: 18px;
+  box-shadow: 5px 5px 0 var(--honey);
+  padding: 18px 20px;
+  width: 240px;
+  z-index: 99;
+  display: none;
+  animation: slide-up .2s cubic-bezier(.34,1.56,.64,1);
+}
+#settingsPanel.open { display: block; }
+@keyframes slide-up { from{transform:translateY(12px);opacity:0;} to{transform:translateY(0);opacity:1;} }
+
+.settings-title { font-family: 'Fredoka One', cursive; font-size: 16px; color: var(--deep-honey); margin-bottom: 14px; }
+.settings-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; font-size: 14px; font-weight: 700; color: #7A5800; }
+.settings-row select { font-size: 13px; padding: 5px 10px; }
+.voice-badge {
+  background: var(--comb); border: 2px solid var(--honey);
+  border-radius: 50px; padding: 4px 12px;
+  font-size: 12px; font-weight: 800; color: var(--deep-honey);
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <div class="header">
+    <div class="bee-anim">🐝</div>
+    <div class="app-title">Spelling Bee Coach</div>
+    <div class="app-sub">Your AI-powered practice moderator</div>
+  </div>
+
+  <!-- ── STEP 1: Setup ── -->
+  <div id="step-setup" class="step active">
+    <div class="card">
+      <div class="card-title">📋 How It Works</div>
+      <div class="how-it-works">
+        <ol>
+          <li>Upload your word list image <strong>in the Claude chat</strong> and ask: <em>"Extract the words"</em></li>
+          <li>Claude will reply with all the words — copy them</li>
+          <li>Paste the words below (one per line, or comma-separated)</li>
+          <li>Hit <strong>Start</strong> and practice with full audio!</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📝 Paste Your Word List</div>
+      <textarea id="wordInput" placeholder="Paste the words here (one per line, or comma-separated)"></textarea>
+
+      <div id="chipPreview" class="chip-list" style="margin-top:14px;"></div>
+      <div id="chipHint" style="font-size:13px;font-weight:700;color:#9A7000;margin-top:8px;display:none;">
+        Tap a word to remove it from this round.
+      </div>
+
+      <div style="margin-top:18px;">
+        <button class="btn btn-honey" id="startBtn">🚀 Start the Spelling Bee!</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 2: Game ── -->
+  <div id="step-game" class="step">
+
+    <div class="card" style="padding:18px 22px;">
+      <div class="scoreboard">
+        <div class="score-tile">
+          <div class="score-num c-green" id="sCorrect">0</div>
+          <div class="score-label">Correct</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-num c-red" id="sWrong">0</div>
+          <div class="score-label">Wrong</div>
+        </div>
+        <div class="score-tile">
+          <div class="score-num c-honey" id="sPct">—</div>
+          <div class="score-label">Score</div>
+        </div>
+      </div>
+      <div class="progress-wrap"><div class="progress-fill" id="progressFill" style="width:0"></div></div>
+      <div class="progress-label" id="progressLabel">Word 1 of —</div>
+    </div>
+
+    <div class="card">
+      <div class="bubble-wrap">
+        <div class="bubble-bee" id="bubbleBee">🐝</div>
+        <div class="bubble" id="bubbleEl">
+          <div class="bubble-tag">Moderator <span class="speaking-dot" id="speakDot"></span></div>
+          <div class="bubble-text" id="bubbleText">Press <strong>Hear Word</strong> to begin!</div>
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;">
+        <button class="hear-again-btn" id="hearBtn">🔊 Hear Word</button>
+      </div>
+
+      <div class="feedback-box" id="feedbackBox">
+        <div class="feedback-icon" id="feedbackIcon"></div>
+        <div id="feedbackMsg"></div>
+      </div>
+
+      <div class="answer-area">
+        <input class="answer-input" id="answerInput" type="text"
+               placeholder="TYPE YOUR SPELLING…"
+               autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false" />
+        <button class="btn btn-green" id="checkBtn">✓ Check</button>
+      </div>
+
+      <div class="action-row">
+        <button class="btn btn-ghost" id="skipBtn">⏭ Skip</button>
+        <button class="btn btn-ghost" id="quitBtn" style="margin-left:auto;">🏁 End Session</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── STEP 3: Results ── -->
+  <div id="step-results" class="step">
+    <div class="card">
+      <div class="results-hero">
+        <div class="trophy-emoji" id="trophyEmoji">🏆</div>
+        <div class="result-title" id="resultTitle">Session Complete!</div>
+        <div class="result-sub" id="resultSub"></div>
+
+        <div class="scoreboard" style="justify-content:center;">
+          <div class="score-tile">
+            <div class="score-num c-green" id="rCorrect">0</div>
+            <div class="score-label">Correct</div>
+          </div>
+          <div class="score-tile">
+            <div class="score-num c-red" id="rWrong">0</div>
+            <div class="score-label">Wrong</div>
+          </div>
+          <div class="score-tile">
+            <div class="score-num c-honey" id="rPct">—</div>
+            <div class="score-label">Score</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="missed-section" id="missedSection" style="display:none;">
+        <div class="missed-title">📝 Words to Practice More</div>
+        <div id="missedList"></div>
+      </div>
+
+      <div class="results-actions">
+        <button class="btn btn-honey" id="retryBtn">🔄 Retry This List</button>
+        <button class="btn btn-ghost" id="missedOnlyBtn" id="missedOnlyBtn" style="display:none;">🎯 Practice Missed Only</button>
+        <button class="btn btn-ghost" id="newListBtn">📝 New Word List</button>
+      </div>
+    </div>
+  </div>
+
+<!-- ── Floating Settings ── -->
+<button id="settingsToggle" title="Audio Settings" aria-label="Audio Settings">⚙️</button>
+
+<div id="settingsPanel">
+  <div class="settings-title">🔊 Audio Settings</div>
+  <div class="settings-row">
+    <label>Voice</label>
+    <span class="voice-badge">Samantha (en-US)</span>
+  </div>
+  <div class="settings-row">
+    <label for="rateSelect">Speed</label>
+    <select id="rateSelect">
+      <option value="0.75">🐢 Slow</option>
+      <option value="0.88" selected>🐝 Normal</option>
+      <option value="1.05">⚡ Fast</option>
+    </select>
+  </div>
+  <button class="btn btn-ghost" id="testVoiceBtn" style="width:100%;justify-content:center;margin-top:4px;font-size:14px;">▶ Test Voice</button>
+</div>
+
+</div><!-- /wrap -->
+
+<script>
+// ── All logic runs after DOM is ready ───────────────────────────
+window.addEventListener('load', function() {
+
+  // ── Voice setup ────────────────────────────────────────────────
+  let selVoice = null;
+  const rateSel = document.getElementById('rateSelect');
+
+  function loadVoices() {
+    const all = speechSynthesis.getVoices();
+    const pool = all.filter(v => v.lang.startsWith('en'));
+    selVoice = pool.find(v => v.name === 'Samantha' && v.lang === 'en-US')
+            || pool.find(v => /Samantha/i.test(v.name))
+            || pool.find(v => /Zira|Karen|Google US English/i.test(v.name))
+            || pool[0] || all[0] || null;
+  }
+  speechSynthesis.onvoiceschanged = loadVoices;
+  loadVoices();
+
+  function speak(text, onEnd) {
+    if (!('speechSynthesis' in window)) { if (onEnd) onEnd(); return; }
+    speechSynthesis.cancel();
+    const utt = new SpeechSynthesisUtterance(text);
+    utt.rate  = parseFloat(rateSel.value);
+    utt.pitch = 1.0;
+    if (selVoice) utt.voice = selVoice;
+    setBubbleSpeaking(true);
+    utt.onend = utt.onerror = () => { setBubbleSpeaking(false); if (onEnd) onEnd(); };
+    speechSynthesis.speak(utt);
+  }
+
+  function setBubbleSpeaking(on) {
+    const el = document.getElementById('bubbleEl');
+    if (el) el.classList.toggle('speaking', on);
+  }
+
+  // ── Settings panel ─────────────────────────────────────────────
+  const settingsToggle = document.getElementById('settingsToggle');
+  const settingsPanel  = document.getElementById('settingsPanel');
+
+  settingsToggle.addEventListener('click', (e) => {
+    e.stopPropagation();
+    settingsPanel.classList.toggle('open');
+  });
+  document.addEventListener('click', (e) => {
+    if (!settingsPanel.contains(e.target) && e.target !== settingsToggle) {
+      settingsPanel.classList.remove('open');
+    }
+  });
+  document.getElementById('testVoiceBtn').addEventListener('click', () => {
+    speak("Hello! I am Samantha, your spelling bee moderator. Let's practice!");
+  });
+
+  // ── Word list + chips ──────────────────────────────────────────
+  const wordInput   = document.getElementById('wordInput');
+  const chipPreview = document.getElementById('chipPreview');
+  const chipHint    = document.getElementById('chipHint');
+  const startBtn    = document.getElementById('startBtn');
+  let parsedWords = [];
+  let removedWords = new Set();
+
+  wordInput.addEventListener('input', parseWords);
+
+  function parseWords() {
+    const raw = wordInput.value.trim();
+    if (!raw) { parsedWords = []; renderChips(); return; }
+    parsedWords = raw.split(/[\n,]+/)
+      .map(w => w.trim().replace(/[^a-zA-Z'-]/g, ''))
+      .filter(Boolean);
+    removedWords = new Set();
+    renderChips();
+  }
+
+  function renderChips() {
+    chipPreview.innerHTML = '';
+    if (!parsedWords.length) { chipHint.style.display = 'none'; return; }
+    chipHint.style.display = 'block';
+    parsedWords.forEach(w => {
+      const c = document.createElement('div');
+      c.className = 'chip' + (removedWords.has(w) ? ' removed' : '');
+      c.textContent = w;
+      c.title = removedWords.has(w) ? 'Click to restore' : 'Click to remove';
+      c.addEventListener('click', () => {
+        if (removedWords.has(w)) removedWords.delete(w);
+        else removedWords.add(w);
+        renderChips();
+      });
+      chipPreview.appendChild(c);
+    });
+  }
+
+  // No pre-load — placeholder handles the hint
+  parseWords();
+
+  // ── Game state ─────────────────────────────────────────────────
+  let gameWords = [];
+  let idx = 0;
+  let correct = 0, wrong = 0;
+  let results = [];
+  let wordHeard = false;
+  let attempts = 0;
+
+  function shuffle(arr) {
+    const a = [...arr];
+    for (let i = a.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [a[i], a[j]] = [a[j], a[i]];
+    }
+    return a;
+  }
+
+  function startGame(overrideList) {
+    const list = Array.isArray(overrideList)
+      ? overrideList
+      : parsedWords.filter(w => !removedWords.has(w));
+    if (!list.length) { alert('Please add some words first!'); return; }
+    gameWords = shuffle(list);
+    idx = 0; correct = 0; wrong = 0; results = []; attempts = 0;
+    wordHeard = false;
+    showStep('game');
+    resetFeedback();
+    document.getElementById('answerInput').value = '';
+    document.getElementById('answerInput').disabled = false;
+    document.getElementById('checkBtn').disabled = false;
+    updateScore();
+    updateProgress();
+    setBubbleText("Press 🔊 <strong>Hear Word</strong> to get your first word!");
+    speak("Welcome to the spelling bee! Press the Hear Word button to get started.");
+  }
+
+  startBtn.addEventListener('click', () => startGame());
+
+  function showStep(name) {
+    ['setup','game','results'].forEach(s => {
+      document.getElementById('step-' + s).classList.toggle('active', s === name);
+    });
+  }
+
+  // ── Moderator ──────────────────────────────────────────────────
+  const spokenIntros = [
+    w => `Your word is ${w}.`,
+    w => `Please spell: ${w}.`,
+    w => `Spell the word: ${w}.`,
+    w => `Here is your word. ${w}.`,
+    w => `The next word is ${w}.`,
+  ];
+  let lastIntro = -1;
+
+  function pickSpokenIntro(word) {
+    // Exclude index 4 ("The next word is") when on first word — but moderatorAnnounce already guards that
+    let i;
+    do { i = Math.floor(Math.random() * spokenIntros.length); } while (i === lastIntro);
+    lastIntro = i;
+    return spokenIntros[i](word);
+  }
+
+  function moderatorAnnounce(word) {
+    wordHeard = true;
+    setBubbleText(`🔊 Listen carefully… <span style="font-size:15px;color:#9A7000;">Type what you hear!</span>`);
+    // First word always uses a non-"next" intro
+    speak(idx === 0 ? `Your word is ${word}.` : pickSpokenIntro(word));
+  }
+
+  function setBubbleText(html) {
+    const el = document.getElementById('bubbleText');
+    if (el) el.innerHTML = html;
+  }
+
+  // ── Hear word ──────────────────────────────────────────────────
+  document.getElementById('hearBtn').addEventListener('click', () => {
+    if (idx >= gameWords.length) return;
+    speechSynthesis.cancel();
+    moderatorAnnounce(gameWords[idx]);
+  });
+
+  // ── Check answer ───────────────────────────────────────────────
+  document.getElementById('checkBtn').addEventListener('click', checkAnswer);
+  document.getElementById('answerInput').addEventListener('keydown', e => {
+    if (e.key === 'Enter') checkAnswer();
+  });
+
+  function checkAnswer() {
+    if (!wordHeard) {
+      speak("Please listen to the word first by pressing the Hear Word button.");
+      return;
+    }
+    const typed = document.getElementById('answerInput').value.trim().replace(/[^a-zA-Z'-]/g, '');
+    if (!typed) { speak("Please type your spelling first."); return; }
+
+    const word = gameWords[idx];
+    const isCorrect = typed.toLowerCase() === word.toLowerCase().replace(/[^a-zA-Z'-]/g, '');
+    const fb = document.getElementById('feedbackBox');
+
+    if (isCorrect) {
+      results.push({ word, typed, correct: true });
+      correct++;
+      updateScore();
+      document.getElementById('answerInput').disabled = true;
+      document.getElementById('checkBtn').disabled = true;
+      document.getElementById('feedbackIcon').textContent = '🌟';
+      const msgs = ['That is correct! Well done!','Excellent! Perfect spelling!','Outstanding! Absolutely right!','Correct! You are on a roll!','Brilliant! That is exactly right!'];
+      document.getElementById('feedbackMsg').textContent = '✅ Correct spelling!';
+      fb.className = 'feedback-box correct';
+      speak(msgs[Math.floor(Math.random() * msgs.length)], () => setTimeout(nextWord, 600));
+
+    } else if (attempts === 0) {
+      attempts = 1;
+      document.getElementById('feedbackIcon').textContent = '🤔';
+      document.getElementById('feedbackMsg').textContent = '❓ Not quite — try one more time!';
+      fb.className = 'feedback-box wrong';
+      document.getElementById('answerInput').value = '';
+      document.getElementById('answerInput').focus();
+      speak(`Not quite! Let's try that again. Your word is ${word}.`);
+
+    } else {
+      results.push({ word, typed, correct: false });
+      wrong++;
+      updateScore();
+      document.getElementById('answerInput').disabled = true;
+      document.getElementById('checkBtn').disabled = true;
+      document.getElementById('feedbackIcon').textContent = '💛';
+      document.getElementById('feedbackMsg').textContent = '❌ Not quite — listen for the correct spelling!';
+      fb.className = 'feedback-box wrong';
+      speak(`That is okay! The correct spelling is: ${word}.`, () => {
+        setTimeout(() => {
+          speak(`${word.split('').join(', ')}.`, () => setTimeout(nextWord, 800));
+        }, 800);
+      });
+    }
+  }
+
+  // ── Skip ───────────────────────────────────────────────────────
+  document.getElementById('skipBtn').addEventListener('click', () => {
+    if (!wordHeard) { speak("Please hear the word first."); return; }
+    results.push({ word: gameWords[idx], typed: '(skipped)', correct: false });
+    wrong++;
+    updateScore();
+    speak('Skipping this word.', () => setTimeout(nextWord, 300));
+  });
+
+  // ── Quit ───────────────────────────────────────────────────────
+  document.getElementById('quitBtn').addEventListener('click', () => {
+    speechSynthesis.cancel();
+    showResults();
+  });
+
+  // ── Next word ──────────────────────────────────────────────────
+  function nextWord() {
+    idx++;
+    if (idx >= gameWords.length) { showResults(); return; }
+    wordHeard = false;
+    attempts = 0;
+    resetFeedback();
+    document.getElementById('answerInput').value = '';
+    document.getElementById('answerInput').disabled = false;
+    document.getElementById('checkBtn').disabled = false;
+    updateProgress();
+    setBubbleText(`Word ${idx + 1} of ${gameWords.length} — press 🔊 <strong>Hear Word</strong> when ready!`);
+    speak(`Word number ${idx + 1}. Press Hear Word when you are ready.`);
+  }
+
+  function resetFeedback() {
+    document.getElementById('feedbackBox').className = 'feedback-box';
+  }
+
+  // ── Score / progress ───────────────────────────────────────────
+  function updateScore() {
+    document.getElementById('sCorrect').textContent = correct;
+    document.getElementById('sWrong').textContent   = wrong;
+    const total = correct + wrong;
+    document.getElementById('sPct').textContent = total ? Math.round(correct / total * 100) + '%' : '—';
+  }
+
+  function updateProgress() {
+    document.getElementById('progressLabel').textContent = `Word ${idx + 1} of ${gameWords.length}`;
+    document.getElementById('progressFill').style.width = (idx / gameWords.length * 100) + '%';
+  }
+
+  // ── Results ────────────────────────────────────────────────────
+  function showResults() {
+    showStep('results');
+    const total = gameWords.length;
+    const pct   = total ? Math.round(correct / total * 100) : 0;
+    document.getElementById('rCorrect').textContent = correct;
+    document.getElementById('rWrong').textContent   = wrong;
+    document.getElementById('rPct').textContent     = pct + '%';
+    document.getElementById('trophyEmoji').textContent = pct === 100 ? '🏆' : pct >= 80 ? '🥇' : pct >= 60 ? '🥈' : pct >= 40 ? '🥉' : '📚';
+    document.getElementById('resultTitle').textContent = pct === 100 ? 'Perfect Score! 🎉' : pct >= 80 ? 'Excellent Work! 🌟' : pct >= 60 ? 'Good Job! 👍' : 'Keep Practicing! 💪';
+    const subs = pct === 100
+      ? 'You spelled every single word correctly! You are ready for the real bee!'
+      : pct >= 80 ? `You got ${correct} out of ${total} — impressive! A little more practice and you will be unstoppable.`
+      : pct >= 60 ? `You got ${correct} out of ${total}. Great effort — focus on the missed words and try again!`
+      : `You got ${correct} out of ${total}. Every expert started as a beginner — keep practicing!`;
+    document.getElementById('resultSub').textContent = subs;
+
+    const missed = results.filter(r => !r.correct);
+    if (missed.length) {
+      document.getElementById('missedSection').style.display = 'block';
+      document.getElementById('missedList').innerHTML = missed.map(r => `
+        <div class="missed-row">
+          <span class="missed-word">${r.word}</span>
+          <span class="missed-typed">You wrote: <em>${r.typed}</em></span>
+        </div>`).join('');
+      document.getElementById('missedOnlyBtn').style.display = 'inline-flex';
+    } else {
+      document.getElementById('missedSection').style.display = 'none';
+      document.getElementById('missedOnlyBtn').style.display = 'none';
+    }
+    speak(subs);
+  }
+
+  document.getElementById('retryBtn').addEventListener('click', () => startGame());
+  document.getElementById('missedOnlyBtn').addEventListener('click', () => {
+    startGame(results.filter(r => !r.correct).map(r => r.word));
+  });
+  document.getElementById('newListBtn').addEventListener('click', () => {
+    speechSynthesis.cancel();
+    wordInput.value = '';
+    parsedWords = [];
+    removedWords = new Set();
+    renderChips();
+    showStep('setup');
+  });
+
+}); // end window.onload
+</script>
+</body>
+</html>
