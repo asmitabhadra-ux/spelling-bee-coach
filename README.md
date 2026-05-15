@@ -1,8 +1,10 @@
 🐝 Spelling Bee Coach
+
 An AI-powered spelling bee practice app for kids. Upload a word list, listen to the moderator say each word aloud, type your spelling, and get instant audio feedback. Includes a second-chance system, score tracking, and a results summary. No installation needed — runs entirely in the browser.
 
 
 ✨ Features
+
 🔊 Audio moderator — Each word is spoken aloud clearly by a natural-sounding voice (Samantha en-US)
 🎯 Second chance — Students get one retry before the correct spelling is revealed
 🔤 Letter-by-letter spelling — After 2 failed attempts, the app slowly spells the word out loud
@@ -15,14 +17,15 @@ An AI-powered spelling bee practice app for kids. Upload a word list, listen to 
 
 
 🚀 How to Use
+
 Step 1 — Get your word list
 Upload an image of your word list here in any AI chat and ask:
-
 "Extract the words from this image"
-
 It will read the image and reply with all the words.
+
 Step 2 — Paste the words
 Copy the words from Claude and paste them into the app's text box (one per line or comma-separated).
+
 Step 3 — Start the bee!
 Click 🚀 Start the Spelling Bee and follow the moderator's instructions:
 
@@ -34,7 +37,6 @@ Get instant audio feedback!
 
 🎮 Game Rules
 Attempt
-Result
 ✅ Correct on 1st try
 Marked correct, move to next word
 ❓ Wrong on 1st try
@@ -69,4 +71,4 @@ Free to use for personal and educational purposes.
 
 
 
-Made with 🐝 and ❤️ using Claude
+Made with 🐝 and ❤️ using Claude andd guided by Asmita Bhadra
