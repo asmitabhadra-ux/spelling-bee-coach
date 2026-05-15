@@ -6,13 +6,21 @@ An AI-powered spelling bee practice app for kids. Upload a word list, listen to 
 ✨ Features
 
 🔊 Audio moderator — Each word is spoken aloud clearly by a natural-sounding voice (Samantha en-US)
+
 🎯 Second chance — Students get one retry before the correct spelling is revealed
+
 🔤 Letter-by-letter spelling — After 2 failed attempts, the app slowly spells the word out loud
+
 📊 Live score tracker — Tracks correct, wrong, and overall percentage in real time
+
 🔀 Random word order — Words are shuffled every round using a Fisher-Yates algorithm
+
 🏆 Results screen — Shows score, missed words, and an encouraging message
+
 🎯 Practice missed words — Retry only the words the student got wrong
+
 ⚙️ Audio speed control — Slow, Normal, or Fast via the settings icon
+
 📱 Works on any device — No installation, just open in a browser
 
 
